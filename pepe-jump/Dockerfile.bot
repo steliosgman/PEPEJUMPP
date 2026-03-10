@@ -1,0 +1,17 @@
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json tsconfig.json ./
+RUN npm install
+COPY scripts/ ./scripts/
+COPY programs/ ./programs/
+
+# Helper script for sleeping until midnight UTC
+RUN echo '#!/bin/sh' > /usr/local/bin/sleep_until_midnight && \
+    echo 'now=$(date +%s)' >> /usr/local/bin/sleep_until_midnight && \
+    echo 'tomorrow=$(date -d "tomorrow 00:00:00 UTC" +%s 2>/dev/null || date -v+1d -v0H -v0M -v0S +%s)' >> /usr/local/bin/sleep_until_midnight && \
+    echo 'diff=$((tomorrow - now))' >> /usr/local/bin/sleep_until_midnight && \
+    echo 'echo "Sleeping ${diff}s until midnight UTC..."' >> /usr/local/bin/sleep_until_midnight && \
+    echo 'sleep ${diff}' >> /usr/local/bin/sleep_until_midnight && \
+    chmod +x /usr/local/bin/sleep_until_midnight
+
+CMD ["npx", "ts-node", "scripts/telegram-bot.ts"]

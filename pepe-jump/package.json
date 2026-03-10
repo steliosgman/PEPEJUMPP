@@ -1,0 +1,26 @@
+{
+  "name": "pepe-jump",
+  "version": "1.0.0",
+  "description": "PEPE JUMP — Crypto Meme Game on Solana",
+  "license": "MIT",
+  "scripts": {
+    "build": "anchor build",
+    "test": "anchor test",
+    "deploy": "anchor deploy --provider.cluster devnet",
+    "dev": "cd app && npm run dev",
+    "bot": "npx ts-node scripts/telegram-bot.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.87.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^10.0.0",
+    "chai": "^4.3.0",
+    "mocha": "^10.0.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

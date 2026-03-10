@@ -1,0 +1,61 @@
+# ============================================================================
+# PEPE JUMP — Docker Compose (one-command deployment)
+# ============================================================================
+# Usage:
+#   docker-compose up --build        # Start everything
+#   docker-compose up -d             # Start in background
+#   docker-compose logs -f frontend  # View frontend logs
+#   docker-compose down              # Stop everything
+# ============================================================================
+
+version: "3.8"
+
+services:
+  # Frontend (React app served by Nginx)
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - VITE_NETWORK=${VITE_NETWORK:-devnet}
+      - VITE_SOLANA_RPC=${VITE_SOLANA_RPC:-https://api.devnet.solana.com}
+      - VITE_PROGRAM_ID=${VITE_PROGRAM_ID}
+    restart: unless-stopped
+
+  # Telegram Bot (optional, comment out if not using)
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    environment:
+      - SOLANA_RPC=${VITE_SOLANA_RPC:-https://api.devnet.solana.com}
+      - PROGRAM_ID=${VITE_PROGRAM_ID}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    restart: unless-stopped
+    depends_on:
+      - frontend
+
+  # Daily Prize Cron Job
+  prize-cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    command: >
+      sh -c "while true; do
+        echo 'Waiting for next UTC midnight...';
+        sleep_until_midnight;
+        npx ts-node scripts/daily-prizes.ts;
+      done"
+    environment:
+      - SOLANA_RPC=${VITE_SOLANA_RPC:-https://api.devnet.solana.com}
+      - PROGRAM_ID=${VITE_PROGRAM_ID}
+      - WALLET_PATH=/keys/authority.json
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    volumes:
+      - ./keys:/keys:ro  # Mount authority keypair (keep secure!)
+    restart: unless-stopped
